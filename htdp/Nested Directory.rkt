@@ -43,23 +43,9 @@
 (check-expect (file-count nested_dir) 5)
 
 (define (file-count d)
-  (local (;Dir -> N
-          (define (file-count-dir ad)
-            (+ (file-count-files (dir-files ad))
-               (file-count-dirs (dir-dirs ad))))
-            
-          ;Dir* -> N
-          (define (file-count-dirs dn)
-            (cond
-              [(empty? dn) 0]
-              [else (+ (file-count-dir (first dn)) (file-count-dirs (rest dn)))])
-            )
-          
-          ;File* -> N
-          (define (file-count-files fn)
-            (cond
-              [(empty? fn) 0]
-              [else (+ 1 (file-count-files (rest fn)))]))
-          
-          )
-    (file-count-dir d)))
+  
+  (+ (length (dir-files d))
+      (foldl +
+             0 
+             (map file-count (dir-dirs d)))))
+

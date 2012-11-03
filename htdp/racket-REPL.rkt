@@ -19,5 +19,16 @@
 ; Evaluates an expression;
 ; Mul|Add,Number -> Number
 (check-expect (eval-expression 0) 0)
-;(check-expect (eval-expression (make-mul 3 5)) 15)
-(define (eval-expression expr) 0)
+(check-expect (eval-expression (make-mul 3 5)) 15)
+(check-expect (eval-expression (make-add 4 5)) 9)
+(check-expect (eval-expression (make-add (make-mul 3 7) 5)) 26)
+(check-expect (eval-expression (make-add (make-mul 1 1) 10)) 11)
+(check-expect (eval-expression (make-mul (make-add 1 (make-mul 2 3)) (make-mul 2 6))) 84)
+ 
+ 
+(define (eval-expression expr) 
+  (cond 
+    [(number? expr) expr]
+    [(mul? expr) (* (eval-expression (mul-left expr)) (eval-expression (mul-right expr)))]
+    [(add? expr) (+ (eval-expression (add-left expr)) (eval-expression (add-right expr)))]))
+

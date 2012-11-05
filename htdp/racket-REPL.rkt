@@ -32,3 +32,75 @@
     [(mul? expr) (* (eval-expression (mul-left expr)) (eval-expression (mul-right expr)))]
     [(add? expr) (+ (eval-expression (add-left expr)) (eval-expression (add-right expr)))]))
 
+
+; Atom Predicate
+; S-Exp -> Boolean
+(check-expect (atom? "s") true)
+(check-expect (atom? (make-posn 5 6)) false)
+(check-expect (atom? 99) true)
+(check-expect (atom? 'f1) true)
+(define (atom? s) 
+  (or (symbol? s) (number? s) (string? s)))
+
+; A BSL-var-expr is one of:
+; – Number
+; – Symbol
+; – (make-add BSL-var-expr BSL-var-expr)
+; – (make-mul BSL-var-expr BSL-var-expr)
+
+;Substitute symbol by a Number
+;BSL-Var-Expr -> BSL-Var-Expr
+(check-expect (subst 'y 'x 2) 'y)
+(check-expect (subst 'x 'x 3) 3)
+(check-expect (subst (make-add 'x 3) 'x 2 ) (make-add 2 3))
+; add and mul recursive
+(check-expect (subst (make-add (make-add 4 'x) 3) 'x 2 ) (make-add (make-add 4 2) 3))
+; recursive add where x does not exist
+(check-expect (subst (make-add (make-add 4 'y) 3) 'x 2 ) (make-add (make-add 4 'y) 3))
+
+(check-expect (subst (make-add (make-mul 4 'x) 3) 'x 2 ) (make-add (make-mul 4 2) 3))
+; two tangents, exists/does not exist, recursive
+(define (subst e x v) 
+  (cond
+    [(number? e) e]
+    [(symbol? e) (if (eq? x e) v e)]
+    [(add? e) (make-add (subst (add-left e) x v) (subst (add-right e) x v))]
+    [(mul? e) (make-mul (subst (mul-left e) x v) (subst (mul-right e) x v))]
+    ))
+;==========================================================================================
+; The method parse was copied from a textbook :)
+(define WRONG "wrong kind of S-expression")
+ 
+; S-expr -> BSL-expr
+; create representation of a BSL expression for s (if possible)
+(check-expect (parse '(* 3 5)) (make-mul 3 5))
+(check-expect (parse '(* 4 (+ 2 3))) (make-mul 4 (make-add 2 3)))
+(define (parse s)
+  (local (; S-expr -> BSL-expr
+          (define (parse s)
+            (cond
+              [(atom? s) (parse-atom s)]
+              [else (parse-sl s)]))
+ 
+          ; SL -> BSL-expr
+          (define (parse-sl s)
+            (local ((define L (length s)))
+              (cond
+                [(< L 3)
+                 (error WRONG)]
+                [(and (= L 3) (symbol? (first s)))
+                 (cond
+                   [(symbol=? (first s) '+)
+                    (make-add (parse (second s)) (parse (third s)))]
+                   [(symbol=? (first s) '*)
+                    (make-mul (parse (second s)) (parse (third s)))]
+                   [else (error WRONG)])]
+                [else
+                 (error WRONG)])))
+           ; Atom -> BSL-expr
+          (define (parse-atom s)
+            (cond
+              [(number? s) s]
+              [(string? s) (error "strings not allowed")]
+              [(symbol? s) (error "symbols not allowed")])))
+    (parse s)))

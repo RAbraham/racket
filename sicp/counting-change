@@ -1,0 +1,20 @@
+;; The first three lines of this file were inserted by DrRacket. They record metadata
+;; about the language level of this file in a form that our tools can easily process.
+#reader(lib "htdp-advanced-reader.ss" "lang")((modname counting-change) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f ())))
+;Find No. of matches for given constraint c and list of units
+;List<Number>, Number -> Number
+(check-expect (number-matches (list 0.01) 0.05) 1)
+(check-expect (number-matches (list 0.01 0.05) 0.05) 2)
+(check-expect (number-matches (list 0.01 0.05 0.10) 0.10) 4)
+(define (number-matches alou constraint) 
+  (local (
+           (define (calc-match running-total)
+             (cond
+               [(= running-total constraint) 1]
+               [(> running-total constraint) 0]
+               [else (foldr + 0 (map calc-match (next-running-totals running-total))) ]
+               ))
+           (define (next-running-totals current-rt)
+             (map (lambda (rt) (+ rt current-rt)) alou))
+           )
+    (foldr + 0 (map calc-match alou))))

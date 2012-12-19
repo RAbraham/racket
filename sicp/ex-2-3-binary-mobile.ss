@@ -4,21 +4,21 @@
 ; A mobile is a pair of
 ;left-branch and right-branch
 (define (make-mobile left right)
-  (list left right))
+  (cons left (cons right empty)))
 (define (left-branch m) (car m))
 (define (right-branch m) (car (cdr m)))
 
+; a branch is a 
+; (length, structure)
 
-; a branch is a pair of either
-; (length, weight)
-; (length, mobile)
+; A structure is either a
+; - weight
+; - Mobile
 
 (define (make-branch length structure)
-  (list length structure))
+  (cons length (cons structure empty)))
 
 
-(define mx (make-mobile (make-branch 99 11)
-                        (make-branch 222 1)))
 
 (define (branch-length b) (car b))
 (define (branch-structure b) (car (cdr b)))
@@ -39,32 +39,74 @@
 ; Mobile -> Int
 
 (define (total-weight m)
-  (+ (weight-branch (left-branch m))
-     (weight-branch (right-branch m))))
+  (let ((l-b (left-branch m))
+        (r-b (right-branch m))) 
+    (+ (weight (branch-structure l-b))
+       (weight (branch-structure r-b))) 
+    ))
 
 
-(define (weight-branch b)
+;Type Structure
+;Weight of a structure is the leaf weight or the weight of the mobile
+; Structure -> Number 
+(define (weight s)
   (cond
-    [(weight? b) (branch-structure b)]
-    [else (total-weight (branch-structure b))]))
-
-;Returns true if branch is a leaf weight
-; Branch -> Boolean
-(define (weight? b)
-  (number?  (branch-structure b)))
-
-
-(define bx (make-branch 100 (make-mobile (make-branch 99 11)
-                                                      (make-branch 98 5))))
-(weight-branch bx)
-
+    [(number? s) s]
+    [else (total-weight s)]))
 
 (define (sum l)
   (foldl + 0 l))
 
-;Mobile-> Int
-; Returns the weight of a mobiles leafs
+;-------------------------------------------------------------------------
 
+; Predicates if the tree is balanced
+; Tree<Mobile> -> True
+(define mbt (make-mobile (make-branch 4 5) (make-branch 4 5)))
+(define mx (make-mobile (make-branch 99 11)
+                        (make-branch 222 1)))
+(define mt (make-mobile (make-branch 100 (make-mobile (make-branch 20 5)
+                                                      (make-branch 25 4)))
+                        (make-branch 450 2)))
+
+(check-expect (balanced? mbt) true)
+(check-expect (balanced? mx) false)
+(check-expect (balanced? mt) true)
+
+(define (balanced? m)
+  (let ((l-b (left-branch m))
+        (r-b (right-branch m)))
+    (and (= (torque l-b)
+            (torque r-b))
+         (balanced-structures? m))))
+
+
+; Type:  mobile 
+; Mobile -> Boolean
+; Contract:
+; Test
+
+(define (balanced-structures? m)
+  (and (balanced-structure? (branch-structure (left-branch m)))
+      (balanced-structure? (branch-structure (right-branch m)))
+  ))
+
+;Type Structure
+; Structure -> Boolean
+
+(define (balanced-structure? s)
+  (cond
+    [(number? s) true]
+    [else (balanced? s)])
+  )(define (scale-tree tree factor)
+  (cond ((null? tree) nil)
+        ((not (pair? tree)) (* tree factor))
+        (else (cons (scale-tree (car tree) factor)
+                    (scale-tree (cdr tree) factor)))))
+
+;Torque of a branch
+; Branch -> N
+(define (torque b)
+  (* (branch-length b) (weight (branch-structure b))))
 
 
 
